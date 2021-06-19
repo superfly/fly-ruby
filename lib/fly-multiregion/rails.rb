@@ -5,7 +5,7 @@ class Fly::MultiRegion::Railtie < Rails::Railtie
   include Fly::MultiRegion::Environment
   initializer("fly.multiregion") do |app|
     warn and return unless eligible_for_redirect?
-    app.config.middleware.insert_after ActionDispatch::Executor, Fly::MultiRegion::CaptureReadOnly
+    app.config.middleware.use Fly::MultiRegion::CaptureReadOnly
   end
 
   def warn

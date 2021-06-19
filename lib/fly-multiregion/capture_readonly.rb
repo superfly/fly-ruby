@@ -12,7 +12,7 @@ module Fly
 
       def prefer_regional_database
         return if primary_region == current_region
-        ENV["DATABASE_URL"] = database_url
+        ENV["DATABASE_URL"] = regional_database_url
       end
 
       def regional_database_url

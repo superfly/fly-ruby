@@ -12,7 +12,7 @@ module Fly
 
       def prefer_regional_database
         return if primary_region == current_region
-        ENV["DATABASE_URL"] = regional_database_url
+        ENV["DATABASE_URL"] = database_url
       end
 
       def regional_database_url
@@ -22,21 +22,25 @@ module Fly
         uri.to_s
       end
 
-      def redirect_to_primary_region!
-        response.headers["fly-replay"] = "region=#{primary_region}"
-        puts "Replaying request in #{primary_region}"
-        render plain: "retry in region #{primary_regionGe}", status: 409
+      def response_body
+        "<html>Replaying request in #{primary_region}</html>"
+      end
+
+      def response_with_redirect_to_primary_region
+        [409, {"fly-replay" => "region=#{primary_region}"}, [response_body]]
       end
 
       def call(env)
-        response = @app.call(env)
-      rescue ActiveRecord::StatementInvalid => e
-        if e.cause.is_a?(PG::ReadOnlySqlTransaction)
-          redirect_to_primary_region!
-        else
-          raise e
+        begin
+          response = @app.call(env)
+        rescue ActiveRecord::StatementInvalid => e
+          if e.cause.is_a?(PG::ReadOnlySqlTransaction)
+            return response_with_redirect_to_primary_region
+          else
+            raise e
+          end
         end
-      else
+
         response
       end
     end

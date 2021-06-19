@@ -36,6 +36,8 @@ module Fly
         else
           raise e
         end
+      else
+        response
       end
     end
   end

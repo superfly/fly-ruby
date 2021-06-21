@@ -1,21 +1,25 @@
-# Ruby gem for multi-region database support on Fly.io
+# Enhance Rails apps deployed on Fly.io with superpowers
 
-Running database replicas alongside your apps on Fly.io [is quick and easy](https://fly.io/docs/getting-started/multi-region-databases/). For read-heavy applications, this approach can increase an app's perceived speed.
+Fly offers a number of native features that can improve the perceived speed and observability of Rails apps with minimal configuration. This gem automates some of the work required to take advantage of these features.
+
+## Regional replicas 
+
+Running database replicas alongside your apps in multiple regions [is quick and easy with built-in Postgresql support](https://fly.io/docs/getting-started/multi-region-databases/). This can increase the perceived speed of read-heavy applications.
 
 The catch: in most primary/replica setups, you have only one writeable primary located in a specific region. Requests that write to the database should be sent directly to the web instance coloated with the primary database.
 
-This gem integrates with Rails to automate write request routing for regionally distributed Postgresql clusters on Fly.
+This gem will automatcally route requests that write to the database to the primary region.
 
 Currently, it does so by:
 
-* modifying the `DATABASE_URL` to point apps to their regional replica
-* catching Postgresql write exceptions to ask Fly to replay the request in the primary region
+* modifying the `DATABASE_URL` to point apps to their local regional replica
+* catching Postgresql exceptions caused by writes to a read-only replica, and redirecting these requests to the primary region
 
 ## Installation and requirements
 
 Just add to your `Gemfile` and `bundle install`:
 
-`gem "fly-multiregion"`
+`gem "fly-rails"`
 
 You should also have [setup a postgres cluster](https://fly.io/docs/getting-started/multi-region-databases/) on Fly. Then:
 
@@ -29,7 +33,7 @@ Finally, set the `FLY_PRIMARY_REGION` environment variable in your app `fly.toml
 
 This gem will send all requests to the primary if you do something like update a user's database session on every GET request.
 
-If your replica becomes writeable for some reason, this technique could backfire and leave your cluster out of sync.
+If your replica becomes writeable due to an outage on the primary, your custer may get out of sync.
 
 ## TODO
 

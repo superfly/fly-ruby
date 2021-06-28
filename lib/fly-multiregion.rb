@@ -1,1 +1,0 @@
-require_relative 'fly-multiregion/rails'

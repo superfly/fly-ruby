@@ -1,7 +1,7 @@
 require_relative "environment"
 
 module Fly
-  module MultiRegion
+  module Rails
     class CaptureReadOnly
       include Environment
 
@@ -26,16 +26,31 @@ module Fly
         "<html>Replaying request in #{primary_region}</html>"
       end
 
-      def response_with_redirect_to_primary_region
+      def respond_with_redirect_to_primary_region
         [409, {"fly-replay" => "region=#{primary_region}"}, [response_body]]
       end
 
+      def inject_regional_preference_in_rack_session(env)
+        # Trick to force the session to load, in case it's not been used yet in the application
+        env["rack.session"].delete(:force_session_load)
+        env["rack.session"]["fly_redirect_threshold"] = 2.seconds.from_now.to_i
+      end
+
+      def region_preferred?(env)
+        threshold = env["rack.session"]["fly_redirect_threshold"]
+        return true if threshold && (threshold - Time.now.to_i) > 0
+        env["rack.session"]["fly_redirect_threshold"] = nil
+      end
+
       def call(env)
+        return respond_with_redirect_to_primary_region if region_preferred?(env)
+
         begin
           response = @app.call(env)
         rescue ActiveRecord::StatementInvalid => e
           if e.cause.is_a?(PG::ReadOnlySqlTransaction)
-            return response_with_redirect_to_primary_region
+            inject_regional_preference_in_rack_session(env)
+            return respond_with_redirect_to_primary_region
           else
             raise e
           end

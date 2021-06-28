@@ -1,5 +1,5 @@
 module Fly
-  module MultiRegion
+  module Rails
     module Environment
       def database_url
         ENV["DATABASE_URL"]

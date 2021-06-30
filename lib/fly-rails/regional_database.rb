@@ -2,7 +2,7 @@ require_relative "environment"
 
 module Fly
   module Rails
-    class CaptureReadOnly
+    class RegionalDatabase
       include Environment
 
       def initialize(app)
@@ -26,29 +26,34 @@ module Fly
         "<html>Replaying request in #{primary_region}</html>"
       end
 
-      def respond_with_redirect_to_primary_region(env)
+      def respond_with_redirect_to_primary_region
         res = Rack::Response.new(response_body, 409, {"fly-replay" => "region=#{primary_region}"})
-        res.set_cookie("fly-redirect-threshold", 2.seconds.from_now.to_i)
         res.finish
       end
 
-      def region_preferred?(env)
-        request = Rack::Request.new(env)
+      def region_preferred?(request)
         threshold = request.cookies["fly-redirect-threshold"]
         threshold && (threshold.to_i - Time.now.to_i) > 0
       end
 
       def call(env)
-        return respond_with_redirect_to_primary_region(env) if region_preferred?(env)
+        request = Rack::Request.new(env)
+
+        return respond_with_redirect_to_primary_region if region_preferred?(request)
 
         begin
           response = @app.call(env)
         rescue ActiveRecord::StatementInvalid => e
           if e.cause.is_a?(PG::ReadOnlySqlTransaction)
-            return respond_with_redirect_to_primary_region(env)
+            return respond_with_redirect_to_primary_region
           else
             raise e
           end
+        end
+
+        # Request was replayed, so set a regional preference for the next 5 seconds
+        if request.headers["Fly-Dispatch-Start"].scan(/t/).count == 2
+          response.set_cookie("fly-redirect-threshold", 5.seconds.from_now.to_i)
         end
 
         response

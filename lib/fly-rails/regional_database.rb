@@ -50,9 +50,8 @@ module Fly
             raise e
           end
         end
-
         # Request was replayed, so set a regional preference for the next 5 seconds
-        if request.headers["Fly-Dispatch-Start"].scan(/t/).count == 2
+        if request.get_header("Fly-Dispatch-Start")&.scan(/t/)&.count == 2
           response.set_cookie("fly-redirect-threshold", 5.seconds.from_now.to_i)
         end
 

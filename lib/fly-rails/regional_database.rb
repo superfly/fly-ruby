@@ -42,7 +42,7 @@ module Fly
         return respond_with_redirect_to_primary_region if region_preferred?(request)
 
         begin
-          response = @app.call(env)
+          status, headers, body = @app.call(env)
         rescue ActiveRecord::StatementInvalid => e
           if e.cause.is_a?(PG::ReadOnlySqlTransaction)
             return respond_with_redirect_to_primary_region
@@ -51,11 +51,13 @@ module Fly
           end
         end
         # Request was replayed, so set a regional preference for the next 5 seconds
+        response = Rack::Response.new(body, status, headers)
+
         if request.get_header("HTTP_FLY_DISPATCH_START")&.scan(/t/)&.count == 2
           response.set_cookie("fly-redirect-threshold", 5.seconds.from_now.to_i)
         end
 
-        response
+        response.finish
       end
     end
   end

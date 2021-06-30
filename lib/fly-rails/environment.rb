@@ -16,6 +16,10 @@ module Fly
       def eligible_for_redirect?
         database_url && primary_region && current_region
       end
+
+      def debug(msg)
+        puts msg if ENV["DEBUG_FLY"]
+      end
     end
   end
 end

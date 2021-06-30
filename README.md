@@ -1,4 +1,4 @@
-# Enhance Rails apps deployed on Fly.io with superpowers
+# Enhance Rails apps on Fly.io
 
 Fly offers a number of native features that can improve the perceived speed and observability of Rails apps with minimal configuration. This gem automates some of the work required to take advantage of these features.
 

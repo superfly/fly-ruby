@@ -6,7 +6,7 @@ module Fly
       end
 
       def primary_region
-        ENV["FLY_PRIMARY_REGION"]
+        ENV["PRIMARY_REGION"]
       end
 
       def current_region

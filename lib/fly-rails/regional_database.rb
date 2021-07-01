@@ -16,7 +16,7 @@ module Fly
       end
 
       def regional_database_url
-        uri = URI.parse(database_url)
+        uri = URI.parse(Fly.configuration.database_url)
         uri.hostname = "#{Fly.configuration.current_region}.#{uri.hostname}"
         uri.port = 5433
         uri.to_s

@@ -28,7 +28,8 @@ module Fly
 
       # Override the configured database URL with that of the regional replica
       def replay_in_primary_region!
-        [409, {"fly-replay" => "region=#{Fly.configuration.primary_region}"}, [response_body]]
+        res = Rack::Response.new(response_body, 409, {"fly-replay" => "region=#{Fly.configuration.primary_region}"})
+        res.finish
       end
 
       # Check whether this request satisfies any of the following conditions for replaying in the primary region:
@@ -55,7 +56,9 @@ module Fly
       def call(env)
         request = Rack::Request.new(env)
 
-        return replay_in_primary_region! if primary_region_preferred?(request)
+        if !in_primary_region? && primary_region_preferred?(request)
+          return replay_in_primary_region!
+        end
 
         begin
           status, headers, body = @app.call(env)

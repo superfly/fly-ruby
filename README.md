@@ -27,8 +27,19 @@ You should also have [setup a postgres cluster](https://fly.io/docs/getting-star
 * ensure that no backup regions are assigned to your application
 * attach the Postgres cluster to your application with `fly postgres attach`
 
-Finally, set the `FLY_PRIMARY_REGION` environment variable in your app `fly.toml` to match the primary database region.
+Finally, set the `PRIMARY_REGION` environment variable in your app `fly.toml` to match the primary database region.
 
+##  Configuration
+
+Most values used by this middleware are configurable. On Rails, add an initializer to `config/initializers/fly.rb`.
+
+```
+Fly.configure do |c|
+  c.replay_threshold_in_seconds = 10
+end
+```
+
+See [the source code](https://github.com/soupedup/fly-rails/blob/main/lib/fly-rails/configuration.rb) for defaults and available configuration options.
 ## Known issues
 
 This gem will send all requests to the primary if you do something like update a user's database session on every GET request.

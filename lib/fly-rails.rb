@@ -10,7 +10,7 @@ module Fly
       @instance ||= Instance.new
     end
 
-    def_delegators :instance, :configuration, :configuration=
+    def_delegators :instance, :configuration, :configuration=, :configure
   end
 
   class Instance
@@ -21,8 +21,9 @@ module Fly
     end
 
     def configure
+      configuration = Fly::Configuration.new
       yield(configuration) if block_given?
-      self.configuration = Fly::Configuration.new(configuration)
+      self.configuration = configuration
     end
   end
 end

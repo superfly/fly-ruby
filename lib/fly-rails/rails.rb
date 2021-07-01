@@ -1,7 +1,7 @@
 require_relative "regional_database"
 
 class Fly::Rails::Railtie < Rails::Railtie
-  initializer("fly.redirect_readonly_queries") do |app|
+  initializer("fly.regional_database") do |app|
     warn and return unless eligible_for_redirect?
     app.config.middleware.use Fly::Rails::RegionalDatabase
   end

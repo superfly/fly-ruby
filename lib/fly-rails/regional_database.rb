@@ -28,7 +28,7 @@ module Fly
 
       # Override the configured database URL with that of the regional replica
       def replay_in_primary_region!
-        [409, {"fly-replay" => "region=#{Fly.configuration.primary_region}"}, response_body]
+        [409, {"fly-replay" => "region=#{Fly.configuration.primary_region}"}, [response_body]]
       end
 
       # Check whether this request satisfies any of the following conditions for replaying in the primary region:

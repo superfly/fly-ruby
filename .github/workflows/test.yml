@@ -2,10 +2,15 @@ on: [push, pull_request]
 name: Test
 jobs:
   test:
+    defaults:
+     run:
+      working_directory: fly-ruby
     steps:
     - name: Setup Ruby, JRuby and TruffleRuby
       uses: ruby/setup-ruby@v1.75.0
     - name: Checkout code
       uses: actions/checkout@v2
     - name: Run tests
-      run: cd fly-ruby && rake
+      run: |
+        bundle install --jobs 4 --retry 3
+        rake

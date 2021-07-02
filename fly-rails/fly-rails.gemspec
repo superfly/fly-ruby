@@ -1,5 +1,5 @@
 Gem::Specification.new do |spec|
-  spec.name = "fly-ruby"
+  spec.name = "fly-rails"
   spec.version = "0.0.1"
   spec.authors = ["Joshua Sierles"]
   spec.description = spec.summary = "Augment Rails apps for deployment in Fly.io"
@@ -11,5 +11,5 @@ Gem::Specification.new do |spec|
 
   spec.add_dependency "rack", ">= 2.0"
   spec.add_dependency "railties", ">= 5.0"
-  spec.add_dependency "sentry-ruby", "~> 0.0.1"
+  spec.add_dependency "fly-ruby", "~> 0.0.1"
 end

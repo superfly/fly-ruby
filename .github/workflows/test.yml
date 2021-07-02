@@ -4,7 +4,7 @@ jobs:
   test:
     defaults:
       run:
-        working_directory: fly-ruby
+        working-directory: fly-ruby
     name: Test on ruby ${{ matrix.ruby_version }} with options - ${{ toJson(matrix.options) }}
     runs-on: ${{ matrix.os }}
     strategy:

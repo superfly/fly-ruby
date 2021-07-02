@@ -1,0 +1,30 @@
+on: [push, pull_request]
+name: Test
+jobs:
+  test:
+    defaults:
+      run:
+        working-directory: fly-ruby
+    name: Test on ruby ${{ matrix.ruby_version }} with options - ${{ toJson(matrix.options) }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - { os: ubuntu-latest, ruby_version: 2.4 }
+          - { os: ubuntu-latest, ruby_version: 2.5 }
+          - { os: ubuntu-latest, ruby_version: 2.6 }
+          - { os: ubuntu-latest, ruby_version: 2.7 }
+          - { os: ubuntu-latest, ruby_version: '3.0' }
+          - { os: ubuntu-latest, ruby_version: jruby }
+    steps:
+    - name: Setup Ruby, JRuby and TruffleRuby
+      uses: ruby/setup-ruby@v1.75.0
+      with:
+        bundler: 1
+        ruby-version: ${{ matrix.ruby_version }}
+    - name: Checkout code
+      uses: actions/checkout@v2
+    - name: Run tests
+      run: |
+        bundle install --jobs 4 --retry 3
+        rake

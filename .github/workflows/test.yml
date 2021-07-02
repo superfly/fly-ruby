@@ -19,6 +19,9 @@ jobs:
     steps:
     - name: Setup Ruby, JRuby and TruffleRuby
       uses: ruby/setup-ruby@v1.75.0
+      with:
+        bundler: 1
+        ruby-version: ${{ matrix.ruby_version }}
     - name: Checkout code
       uses: actions/checkout@v2
     - name: Run tests

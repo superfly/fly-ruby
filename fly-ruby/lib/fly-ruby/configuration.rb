@@ -39,5 +39,9 @@ module Fly
     def database_url
       ENV[database_url_env_var]
     end
+
+    def eligible_for_activation?
+      database_url && primary_region && current_region
+    end
   end
 end

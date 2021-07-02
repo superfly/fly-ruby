@@ -1,5 +1,5 @@
-require_relative "fly-rails/rails"
-require_relative "fly-rails/configuration"
+require_relative "fly-ruby/configuration"
+require_relative "fly-ruby/regional_database"
 require "forwardable"
 
 module Fly

@@ -32,7 +32,7 @@ class TestFlyRuby < Minitest::Test
   end
 
   def test_replayed_request_will_send_next_get_request_to_primary
-    simulate_replayed_post
+    simulate_replayed_post("captured_write")
     assert last_response.ok?
     assert last_response.cookies[Fly.configuration.replay_threshold_cookie].value.first.to_i > Time.now.to_i
     simulate_secondary_get
@@ -40,15 +40,21 @@ class TestFlyRuby < Minitest::Test
     refute last_response.cookies[Fly.configuration.replay_threshold_cookie]
   end
 
-  def simulate_replayed_post
+  def test_threshold_replayed_request_will_not_reset_threshold_cookie
+    simulate_replayed_post("captured_write")
+    simulate_secondary_get
+    simulate_replayed_post("threshold")
+    refute last_response.cookies[Fly.configuration.replay_threshold_cookie]
+  end
+
+  def simulate_replayed_post(state)
     Fly.configuration.current_region = Fly.configuration.primary_region
-    header Fly.configuration.fly_dispatch_header, "t=2000, t=3000"
+    header "Fly-Replay-Src", "state=#{state}"
     post "/"
   end
 
   def simulate_secondary_get
     Fly.configuration.current_region = "ams"
-    header Fly.configuration.fly_dispatch_header, "t=2000"
     get "/"
   end
 

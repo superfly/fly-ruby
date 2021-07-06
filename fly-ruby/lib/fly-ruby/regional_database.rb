@@ -41,7 +41,7 @@ module Fly
       res = Rack::Response.new(
         response_body,
         409,
-        {"fly-replay" => "region=#{Fly.configuration.primary_region}; state=#{state}"}
+        {"fly-replay" => "region=#{Fly.configuration.primary_region};state=#{state}"}
       )
       res.finish
     end

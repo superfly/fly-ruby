@@ -38,11 +38,10 @@ module Fly
     # threshold: A recent write set a threshold during which all requests are replayed
     #
     def replay_in_primary_region!(state:)
-      res = Rack::Response.new(response_body, 409,
-        {
-          "fly-replay" => "region=#{Fly.configuration.primary_region}",
-          "state" => state
-        }
+      res = Rack::Response.new(
+        response_body,
+        409,
+        {"fly-replay" => "region=#{Fly.configuration.primary_region}; state=#{state}"}
       )
       res.finish
     end

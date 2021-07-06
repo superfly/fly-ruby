@@ -1,4 +1,8 @@
 module Fly
+  # Note that using instance variables in Rack middleware is considered a poor practice in
+  # multithreaded environments. Instead of using dirty tricks like using Object#dup,
+  # values are passed to methods.
+
   class RegionalDatabase
     def initialize(app)
       @app = app
@@ -25,60 +29,77 @@ module Fly
       "<html>Replaying request in #{Fly.configuration.primary_region}</html>"
     end
 
-    # Override the configured database URL with that of the regional replica
-    def replay_in_primary_region!
-      res = Rack::Response.new(response_body, 409, {"fly-replay" => "region=#{Fly.configuration.primary_region}"})
+    # Stop the current request and ask for it to be replayed in the primary region.
+    # Pass one of three states to the target region, to determine how to handle the request:
+    #
+    # Possible states: captured_write, http_method, threshold
+    # captured_write: A write was rejected by the database
+    # http_method: A non-idempotent HTTP method was replayed before hitting the application
+    # threshold: A recent write set a threshold during which all requests are replayed
+    #
+    def replay_in_primary_region!(state:)
+      res = Rack::Response.new(response_body, 409,
+        {
+          "fly-replay" => "region=#{Fly.configuration.primary_region}",
+          "state" => state
+        }
+      )
       res.finish
     end
 
-    # Check whether this request satisfies any of the following conditions for replaying in the primary region:
-    #
-    # 1. It arrived before the threshold defined by the last write request. This threshold
-    #    helps avoid the same client from missing its own write due to replication lag,
-    #    like when a user updates a todo list via XHR
-    #
-    # 2. Its HTTP method matches those configured for automatic replay (post/patch/put/delete by default).
-    #    This approach should avoid potentially slow code execution - before_actions or other controller code -
-    #    happening before a request reaches a database write.
-    #
-    def primary_region_preferred?(request)
-      return true if Fly.configuration.replay_http_methods.include?(request.request_method)
-
-      threshold = request.cookies[Fly.configuration.replay_threshold_cookie]
+    def within_replay_threshold?(threshold)
       threshold && (threshold.to_i - Time.now.to_i) > 0
     end
 
-    def replayed?(request)
-      request.get_header("HTTP_#{Fly.configuration.fly_dispatch_header.upcase.tr("-", "_")}")&.scan(/t/)&.count == 2
+    def replayable_http_method?(http_method)
+      Fly.configuration.replay_http_methods.include?(http_method)
+    end
+
+    def replay_request_state(header_value)
+      header_value&.scan(/(.*?)=(.*?)($|;)/)&.detect { |v| v[0] == "state" }&.at(1)
     end
 
     def call(env)
       request = Rack::Request.new(env)
-      if !in_primary_region? && primary_region_preferred?(request)
-        return replay_in_primary_region!
+
+    # Check whether this request satisfies any of the following conditions for replaying in the primary region:
+    #
+    # 1. Its HTTP method matches those configured for automatic replay (post/patch/put/delete by default).
+    #    This approach should avoid potentially slow code execution - before_actions or other controller code -
+    #    happening before a request reaches a database write.
+    # 2. It arrived before the threshold defined by the last write request. This threshold
+    #    helps avoid the same client from missing its own write due to replication lag,
+    #    like when a user adds to a todo list via XHR
+
+      if !in_primary_region?
+        if replayable_http_method?(request.request_method)
+          return replay_in_primary_region!(state: "http_method")
+        elsif within_replay_threshold?(request.cookies[Fly.configuration.replay_threshold_cookie])
+          return replay_in_primary_region!(state: "threshold")
+        end
       end
 
       begin
         status, headers, body = @app.call(env)
       rescue ActiveRecord::StatementInvalid => e
         if e.cause.is_a?(PG::ReadOnlySqlTransaction)
-          return replay_in_primary_region!
+          return replay_in_primary_region!(state: "captured_write")
         else
           raise e
         end
       end
 
       response = Rack::Response.new(body, status, headers)
+      replay_state = replay_request_state(request.get_header("HTTP_FLY_REPLAY_SRC"))
 
-      # Request was replayed, so set a regional preference for the following N seconds
-      if replayed?(request)
+      # Request was replayed, but not by a threshold
+      if replay_state && replay_state != "threshold"
         response.set_cookie(
           Fly.configuration.replay_threshold_cookie,
           Time.now.to_i + Fly.configuration.replay_threshold_in_seconds
         )
-      elsif request.cookies[Fly.configuration.replay_threshold_cookie]
-        response.delete_cookie(Fly.configuration.replay_threshold_cookie)
       end
+
       response.finish
     end
   end

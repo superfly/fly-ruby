@@ -30,18 +30,18 @@ module Fly
     end
 
     # Stop the current request and ask for it to be replayed in the primary region.
-    # Pass one of three reasons to the target region, to determine how to handle the request:
+    # Pass one of three states to the target region, to determine how to handle the request:
     #
-    # Possible reasons: captured_write, http_method, threshold
+    # Possible states: captured_write, http_method, threshold
     # captured_write: A write was rejected by the database
     # http_method: A non-idempotent HTTP method was replayed before hitting the application
     # threshold: A recent write set a threshold during which all requests are replayed
     #
-    def replay_in_primary_region!(reason:)
+    def replay_in_primary_region!(state:)
       res = Rack::Response.new(
         response_body,
         409,
-        {"fly-replay" => "region=#{Fly.configuration.primary_region}; reason=#{reason}"}
+        {"fly-replay" => "region=#{Fly.configuration.primary_region}; state=#{state}"}
       )
       res.finish
     end
@@ -54,8 +54,8 @@ module Fly
       Fly.configuration.replay_http_methods.include?(http_method)
     end
 
-    def replay_request_reason(header_value)
-      header_value&.scan(/(.*?)=(.*?)($|;)/)&.detect { |v| v[0] == "reason" }&.at(1)
+    def replay_request_state(header_value)
+      header_value&.scan(/(.*?)=(.*?)($|;)/)&.detect { |v| v[0] == "state" }&.at(1)
     end
 
     def call(env)
@@ -72,27 +72,27 @@ module Fly
 
       if !in_primary_region?
         if replayable_http_method?(request.request_method)
-          return replay_in_primary_region!(reason: "http_method")
+          return replay_in_primary_region!(state: "http_method")
         elsif within_replay_threshold?(request.cookies[Fly.configuration.replay_threshold_cookie])
-          return replay_in_primary_region!(reason: "threshold")
+          return replay_in_primary_region!(state: "threshold")
         end
       end
 
       begin
         status, headers, body = @app.call(env)
-      rescue ActiveRecord::reasonmentInvalid => e
+      rescue ActiveRecord::StatementInvalid => e
         if e.cause.is_a?(PG::ReadOnlySqlTransaction)
-          return replay_in_primary_region!(reason: "captured_write")
+          return replay_in_primary_region!(state: "captured_write")
         else
           raise e
         end
       end
 
       response = Rack::Response.new(body, status, headers)
-      replay_reason = replay_request_reason(request.get_header("HTTP_FLY_REPLAY_SRC"))
+      replay_state = replay_request_state(request.get_header("HTTP_FLY_REPLAY_SRC"))
 
       # Request was replayed, but not by a threshold
-      if replay_reason && replay_reason != "threshold"
+      if replay_state && replay_state != "threshold"
         response.set_cookie(
           Fly.configuration.replay_threshold_cookie,
           Time.now.to_i + Fly.configuration.replay_threshold_in_seconds

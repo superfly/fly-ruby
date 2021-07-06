@@ -28,7 +28,7 @@ class TestFlyRuby < Minitest::Test
 
   def test_post_request_will_replay_on_secondary_region
     post "/"
-    assert_replayed("http_method")
+    assert_replayed
   end
 
   def test_replayed_request_will_send_next_get_request_to_primary
@@ -36,7 +36,7 @@ class TestFlyRuby < Minitest::Test
     assert last_response.ok?
     assert last_response.cookies[Fly.configuration.replay_threshold_cookie].value.first.to_i > Time.now.to_i
     simulate_secondary_get
-    assert_replayed("threshold")
+    assert_replayed
     refute last_response.cookies[Fly.configuration.replay_threshold_cookie]
   end
 
@@ -47,9 +47,9 @@ class TestFlyRuby < Minitest::Test
     refute last_response.cookies[Fly.configuration.replay_threshold_cookie]
   end
 
-  def simulate_replayed_post(reason)
+  def simulate_replayed_post(state)
     Fly.configuration.current_region = Fly.configuration.primary_region
-    header "Fly-Replay-Src", "reason=#{reason}"
+    header "Fly-Replay-Src", "state=#{state}"
     post "/"
   end
 
@@ -58,8 +58,8 @@ class TestFlyRuby < Minitest::Test
     get "/"
   end
 
-  def assert_replayed(reason)
+  def assert_replayed
     assert_equal 409, last_response.status
-    assert_equal "region=iad; reason=#{reason}", last_response.headers["fly-replay"]
+    assert_equal "region=iad", last_response.headers["fly-replay"]
   end
 end

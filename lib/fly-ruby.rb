@@ -2,6 +2,10 @@ require_relative "fly-ruby/configuration"
 require_relative "fly-ruby/regional_database"
 require "forwardable"
 
+if defined?(::Rails)
+  require_relative "fly-ruby/railtie"
+end
+
 module Fly
   class << self
     extend Forwardable

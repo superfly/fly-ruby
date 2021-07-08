@@ -1,8 +1,8 @@
-[![Test](https://github.com/soupedup/fly-rails/actions/workflows/test.yml/badge.svg)](https://github.com/soupedup/fly-rails/actions/workflows/test.yml)
+[![Test](https://github.com/superfly/fly-ruby/actions/workflows/test.yml/badge.svg)](https://github.com/superfly/fly-ruby/actions/workflows/test.yml)
 
 # Augment Ruby web apps on Fly.io
 
-[Fly.io](https://fly.io) offers a number of native features that can improve the perceived speed and observability of Rails apps with minimal configuration. This gem automates some of the work required to take advantage of these features.
+[Fly.io](https://fly.io) offers a number of native features that can improve the perceived speed and observability of web applications with minimal configuration. This gem automates some of the work required to take advantage of these features.
 
 ## Regional replicas 
 
@@ -31,15 +31,11 @@ Finally, set the `PRIMARY_REGION` environment variable in your app `fly.toml` to
 
 ## Installation
 
-If you're on Rails, add to your Gemfile and `bundle install`:
-
-`gem "fly-rails`
-
-The middleware will insert itself automatically at the top of the Rack middleware stack.
-
-For other frameworks, use:
+Add to your Gemfile and `bundle install`:
 
 `gem "fly-ruby"`
+
+If you're on Rails, the middleware will insert itself automatically at the top of the Rack middleware stack.
 
 ## Configuration
 

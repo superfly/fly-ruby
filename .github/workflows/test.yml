@@ -2,9 +2,6 @@ on: [push, pull_request]
 name: Test
 jobs:
   test:
-    defaults:
-      run:
-        working-directory: fly-ruby
     name: Test on ruby ${{ matrix.ruby_version }} with options - ${{ toJson(matrix.options) }}
     runs-on: ${{ matrix.os }}
     strategy:

@@ -9,10 +9,12 @@ module Fly
     # Automatically replay these HTTP methods in the primary region
     attr_accessor :replay_http_methods
 
-    # Environment variable referencing the database URL.
-    # Gets overwritten by this middleware in secondary regions, so must be interpolated
+    # Environment variables related to the database connection.
+    # These get by this middleware in secondary regions, so they must be interpolated
     # rather than defined directly in the configuration.
     attr_accessor :database_url_env_var
+    attr_accessor :database_host_env_var
+    attr_accessor :database_port_env_var
 
     # Cookie written and read by this middleware storing a UNIX timestamp.
     # Requests arriving before this timestamp will be replayed in the primary region.
@@ -27,6 +29,8 @@ module Fly
       self.current_region = ENV["FLY_REGION"]
       self.replay_http_methods = ["POST", "PUT", "PATCH", "DELETE"]
       self.database_url_env_var = "DATABASE_URL"
+      self.database_host_env_var = "DATABASE_HOST"
+      self.database_port_env_var = "DATABASE_PORT"
       self.replay_threshold_cookie = "fly-replay-threshold"
       self.replay_threshold_in_seconds = 5
     end

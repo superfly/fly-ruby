@@ -11,7 +11,17 @@ module Fly
 
     # Overwrite the primary database URL with that of the regional replica
     def prefer_regional_database!
-      ENV[Fly.configuration.database_url_env_var] = regional_database_url
+      uri = URI.parse(Fly.configuration.database_url)
+      hostname = "#{Fly.configuration.current_region}.#{uri.hostname}"
+      port = 5433
+
+      uri.hostname = hostname
+      uri.port = port
+      uri.to_s
+
+      ENV[Fly.configuration.database_url_env_var] = uri.to_s
+      ENV[Fly.configuration.database_host_env_var] = hostname
+      ENV[Fly.configuration.database_port_env_var] = port.to_s
     end
 
     def in_primary_region?
@@ -19,10 +29,6 @@ module Fly
     end
 
     def regional_database_url
-      uri = URI.parse(Fly.configuration.database_url)
-      uri.hostname = "#{Fly.configuration.current_region}.#{uri.hostname}"
-      uri.port = 5433
-      uri.to_s
     end
 
     def response_body

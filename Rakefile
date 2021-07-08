@@ -9,3 +9,8 @@ end
 
 desc "Run tests"
 task default: :test
+
+
+task :top do
+  puts Rake.application.top_level_tasks
+end

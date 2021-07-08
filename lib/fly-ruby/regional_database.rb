@@ -9,8 +9,19 @@ module Fly
       prefer_regional_database! unless in_primary_region?
     end
 
+    def console?
+      defined?(::Rails::Console) && $stdout.isatty && $stdin.isatty
+    end
+
+    def rake_task?
+      defined?(::Rake) && !Rake.application.top_level_tasks.empty?
+    end
+
     # Overwrite the primary database URL with that of the regional replica
     def prefer_regional_database!
+      # Don't override the database if migrations are running
+      return if console? || rake_task?
+
       uri = URI.parse(Fly.configuration.database_url)
       hostname = "#{Fly.configuration.current_region}.#{uri.hostname}"
       port = 5433

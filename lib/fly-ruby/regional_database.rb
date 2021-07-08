@@ -1,3 +1,5 @@
+require 'rake'
+
 module Fly
   # Note that using instance variables in Rack middleware is considered a poor practice in
   # multithreaded environments. Instead of using dirty tricks like using Object#dup,

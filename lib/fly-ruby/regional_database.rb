@@ -11,17 +11,19 @@ module Fly
       prefer_regional_database! unless in_primary_region?
     end
 
+    # Is the current process a Rails console?
     def console?
       defined?(::Rails::Console) && $stdout.isatty && $stdin.isatty
     end
 
+    # Is the current process a rake task?
     def rake_task?
       defined?(::Rake) && !Rake.application.top_level_tasks.empty?
     end
 
     # Overwrite the primary database URL with that of the regional replica
     def prefer_regional_database!
-      # Don't override the database if migrations are running
+      # Don't override the database if we're not a web process (rake task, console, etc)
       return if console? || rake_task?
 
       uri = URI.parse(Fly.configuration.database_url)

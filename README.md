@@ -52,7 +52,7 @@ See [the source code](https://github.com/soupedup/fly-rails/blob/main/lib/fly-ra
 
 This middleware send all requests to the primary if you do something like update a user's database session on every GET request.
 
-If your replica becomes writeable for some reason, your custer may get out of sync.
+If your replica becomes writeable for some reason, your cluster may get out of sync.
 
 ## TODO
 

@@ -1,23 +1,25 @@
 [![Test](https://github.com/superfly/fly-ruby/actions/workflows/test.yml/badge.svg)](https://github.com/superfly/fly-ruby/actions/workflows/test.yml)
 
-# Augment Ruby web apps on Fly.io
+This gem contains helper code and Rack middleware for deploying Ruby web apps on [Fly.io](https://fly.io). Supported features:
 
-[Fly.io](https://fly.io) offers a number of native features that can improve the perceived speed and observability of web applications with minimal configuration. This gem automates some of the work required to take advantage of these features.
+* Speed up apps by using region-local Postgresql replicas for database reads
 
-## Regional replicas 
+## Speed up apps using region-local database replicas
 
-Running database replicas alongside your apps in multiple regions [is quick and easy with Fly's Postgresql cluster](https://fly.io/docs/getting-started/multi-region-databases/). This can increase the perceived speed of read-heavy applications.
+Fly's cross-region private networking makes it easy to run database replicas [alongside your app instances in multiple regions](https://fly.io/docs/getting-started/multi-region-databases/). These replicas can be used for faster reads, leading to faster application performance.
 
-The catch: in most primary/replica setups, you have one writeable primary located in a specific region. Fly solves this by allowing requests to be *replyed*, at the routing layer, in another region.
+Writes, however, will be slow if performed across regions. Fly allows web apps to specify that a request be *replayed*, at the routing layer, in another region.
 
-This repository includes the `fly-ruby` gem which will utomatcally route requests that write to the database to the primary region. It should work
-with any Rack-compatible Ruby framework.
+This gem includes Rack middleware to automatically route such requests to the primary region. It's designed should work with any Rack-compatible Ruby framework.
 
 Currently, it does this by:
 
 * modifying the `DATABASE_URL` to point apps to their local regional replica
 * replaying non-idempotent (post/put/patch/delete) requests in the primary region
-* catching Postgresql exceptions caused by writes to a read-only replica, and replaying these requests in the primary region
+* catching Postgresql exceptions caused by writes to a read-only replica, and asking for
+  these requests to be replayed in the primary region
+* replaying all requests within a time threshold after a write, to avoid users seeing
+  their own stale data due to replication lag
 
 ## Requirements
 
@@ -35,7 +37,7 @@ Add to your Gemfile and `bundle install`:
 
 `gem "fly-ruby"`
 
-If you're on Rails, the middleware will insert itself automatically at the top of the Rack middleware stack.
+If you're on Rails, the middleware will insert itself automatically, and attempt to reconnect the database.
 
 ## Configuration
 

@@ -45,7 +45,7 @@ module Fly
     end
 
     # Rails-compatible database configuration
-    def database_config
+    def regional_database_config
       {
         "host" => "#{current_region}.#{regional_database_uri.hostname}",
         "port" => 5433

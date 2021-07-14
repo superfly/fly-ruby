@@ -10,7 +10,7 @@ class Fly::Railtie < Rails::Railtie
         # hooks for forking servers to work correctly.
         if defined(ActiveRecord) && ActiveRecord::Base.connected?
           config = Rails.application.config.database_configuration[Rails.env]
-          ActiveRecord::Base.connect_to(config)
+          ActiveRecord::Base.establish_connection(config.merge(Fly.configuration.regional_database_config))
         end
 
         # Set useful headers for debugging

@@ -8,35 +8,23 @@ module Fly
   class RegionalDatabase
     def initialize(app)
       @app = app
-      prefer_regional_database! unless in_primary_region?
     end
 
-    # Is the current process a Rails console?
-    def console?
-      defined?(::Rails::Console) && $stdout.isatty && $stdin.isatty
-    end
+    # Overwrite the database connection string environment variable
+    # to prefer connections to the regional replica.
+    #
+    # For Rails apps, this process will be repeated at middleware insertion time,
+    # to support situations where the database is already accessed by other
+    # initialization code. See Fly::Railtie.
 
-    # Is the current process a rake task?
-    def rake_task?
-      defined?(::Rake) && !Rake.application.top_level_tasks.empty?
-    end
-
-    # Overwrite the primary database URL with that of the regional replica
     def prefer_regional_database!
-      # Don't override the database if we're not a web process (rake task, console, etc)
-      return if console? || rake_task?
+      return if Fly.configuration.web?
 
-      uri = URI.parse(Fly.configuration.database_url)
-      hostname = "#{Fly.configuration.current_region}.#{uri.hostname}"
-      port = 5433
-
-      uri.hostname = hostname
-      uri.port = port
-      uri.to_s
+      uri = Fly.configuration.regional_database_uri
 
       ENV[Fly.configuration.database_url_env_var] = uri.to_s
-      ENV[Fly.configuration.database_host_env_var] = hostname
-      ENV[Fly.configuration.database_port_env_var] = port.to_s
+      ENV[Fly.configuration.database_host_env_var] = uri.hostname
+      ENV[Fly.configuration.database_port_env_var] = uri.port.to_s
     end
 
     def in_primary_region?

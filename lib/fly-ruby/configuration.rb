@@ -39,8 +39,35 @@ module Fly
       ENV[database_url_env_var]
     end
 
+    def regional_database_uri
+      @uri ||= URI.parse(database_url)
+      @uri
+    end
+
+    # Rails-compatible database configuration
+    def database_config
+      {
+        "host" => "#{current_region}.#{regional_database_uri.hostname}",
+        "port" => 5433
+      }
+    end
+
     def eligible_for_activation?
-      database_url && primary_region && current_region
+      database_url && primary_region && current_region && web?
+    end
+
+    # Is the current process a Rails console?
+    def console?
+      defined?(::Rails::Console) && $stdout.isatty && $stdin.isatty
+    end
+
+    # Is the current process a rake task?
+    def rake_task?
+      defined?(::Rake) && !Rake.application.top_level_tasks.empty?
+    end
+
+    def web?
+      !console? && !rake_task?
     end
   end
 end

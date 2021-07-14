@@ -1,5 +1,8 @@
 source 'https://rubygems.org'
 
+gemspec
+
 gem 'rack-test'
 gem 'minitest'
-gemspec
+gem "rails"
+gem "pg"

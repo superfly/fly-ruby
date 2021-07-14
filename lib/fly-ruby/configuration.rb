@@ -48,7 +48,8 @@ module Fly
     def regional_database_config
       {
         "host" => "#{current_region}.#{regional_database_uri.hostname}",
-        "port" => 5433
+        "port" => 5433,
+        "adapter" => "postgresql"
       }
     end
 

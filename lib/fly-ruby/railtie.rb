@@ -8,13 +8,13 @@ class Fly::Railtie < Rails::Railtie
         # If we already have a database connection when this initializer runs,
         # we should reconnect to the region-local database. This may need some additional
         # hooks for forking servers to work correctly.
-        if defined(ActiveRecord) && ActiveRecord::Base.connected?
-          config = Rails.application.config.database_configuration[Rails.env]
+        if defined?(ActiveRecord) && ActiveRecord::Base.connected?
+          config = Rails.application.config.database_configuration[Rails.env] || {}
           ActiveRecord::Base.establish_connection(config.merge(Fly.configuration.regional_database_config))
         end
 
         # Set useful headers for debugging
-        ApplicationController.send(:after_action) do
+        ::ApplicationController.send(:after_action) do
           response.headers['Fly-Region'] = ENV['FLY_REGION']
           response.headers['Fly-Database-Host'] = ENV[Fly.configuration.database_host_env_var]
         end

@@ -6,7 +6,7 @@ This gem contains helper code and Rack middleware for deploying Ruby web apps on
 
 ## Speed up apps using region-local database replicas
 
-Fly's cross-region private networking makes it easy to run database replicas [alongside your app instances in multiple regions](https://fly.io/docs/getting-started/multi-region-databases/). These replicas can be used for faster reads, leading to faster application performance.
+Fly's [cross-region private networking](https://fly.io/docs/reference/privatenetwork/) makes it easy to run database replicas [alongside your app instances in multiple regions](https://fly.io/docs/getting-started/multi-region-databases/). These replicas can be used for faster reads and application performance.
 
 Writes, however, will be slow if performed across regions. Fly allows web apps to specify that a request be *replayed*, at the routing layer, in another region.
 

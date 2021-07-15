@@ -12,7 +12,6 @@ jobs:
           - { os: ubuntu-latest, ruby_version: 2.6 }
           - { os: ubuntu-latest, ruby_version: 2.7 }
           - { os: ubuntu-latest, ruby_version: '3.0' }
-          - { os: ubuntu-latest, ruby_version: jruby }
     services:
     # label used to access the service container
       postgres:

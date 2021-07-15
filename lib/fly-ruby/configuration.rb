@@ -56,6 +56,10 @@ module Fly
       database_url && primary_region && current_region && web?
     end
 
+    def in_secondary_region?
+      primary_region && primary_region != current_region
+    end
+
     # Is the current process a Rails console?
     def console?
       defined?(::Rails::Console) && $stdout.isatty && $stdin.isatty

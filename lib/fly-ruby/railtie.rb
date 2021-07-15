@@ -1,5 +1,7 @@
+require_relative '../fly-ruby'
+
 class Fly::Railtie < Rails::Railtie
-  initializer('fly.regional_database') do |app|
+  initializer("fly.regional_database") do |app|
     if Fly.configuration.eligible_for_activation?
       # Run the middleware high in the stack, but after static file delivery
       app.config.middleware.insert_after ActionDispatch::Executor, Fly::RegionalDatabase
@@ -9,7 +11,7 @@ class Fly::Railtie < Rails::Railtie
         # we should reconnect to the region-local database. This may need some additional
         # hooks for forking servers to work correctly.
         if defined?(ActiveRecord) && ActiveRecord::Base.connected?
-          config = Rails.application.config.database_configuration[Rails.env] || {}
+          config = ActiveRecord::Base.connection_db_config.configuration_hash
           ActiveRecord::Base.establish_connection(config.merge(Fly.configuration.regional_database_config))
         end
 

@@ -1,20 +1,20 @@
-require 'rails'
+require "rails"
 require "active_record"
 require "action_view/railtie"
 require "action_controller/railtie"
-# require "action_mailer/railtie"
-# require "action_cable/engine"
-# require "sprockets/railtie"
-# require "rails/test_unit/railtie"
-require_relative '../../lib/fly-ruby/railtie'
 
-ActiveSupport::Deprecation.silenced = true
+require_relative "../../lib/fly-ruby/railtie"
 
-# need to init app before establish connection so sqlite can place the database file under the correct project root
-class TestApp < Rails::Application
-end
+# Bare bones Rails app, borrowed from the mighty sentry-rails gem
+class TestApp < Rails::Application;end
 
-ActiveRecord::Base.establish_connection(adapter: "postgresql", database: "fly_ruby_test")
+ActiveRecord::Base.establish_connection(
+  adapter: "postgresql",
+  database: "fly_ruby_test",
+  host: "localhost",
+  port: "5432"
+)
+
 ActiveRecord::Base.logger = Logger.new(nil)
 
 ActiveRecord::Schema.define do
@@ -61,7 +61,7 @@ class HelloController < ApplicationController
   end
 
   def world
-    render :plain => "Hello World!"
+    render plain: "Hello World!"
   end
 
   def not_found
@@ -82,12 +82,12 @@ def make_basic_app
   # Usually set for us in production.rb
   app.config.eager_load = true
   app.routes.append do
-    get "/exception", :to => "hello#exception"
-    get "/view", :to => "hello#view"
-    get "/not_found", :to => "hello#not_found"
+    get "/exception", to: "hello#exception"
+    get "/view", to: "hello#view"
+    get "/not_found", to: "hello#not_found"
     get "/world", to: "hello#world"
     resources :posts, only: [:index, :show]
-    root :to => "hello#world"
+    root to: "hello#world"
   end
 
   app.initializer :configure_release do
@@ -95,7 +95,6 @@ def make_basic_app
       config.replay_threshold_in_seconds = 5
     end
   end
-
   app.initialize!
 
   Rails.application = app

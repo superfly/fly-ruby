@@ -20,7 +20,7 @@ module Fly
     def prefer_regional_database!
       return if Fly.configuration.web?
 
-      uri = Fly.configuration.regional_database_uri
+      uri = Fly.configuration.database_uri
 
       ENV[Fly.configuration.database_url_env_var] = uri.to_s
       ENV[Fly.configuration.database_host_env_var] = uri.hostname

@@ -24,6 +24,8 @@ module Fly
     # primary region after a successful write replay
     attr_accessor :replay_threshold_in_seconds
 
+    attr_accessor :database_url
+
     def initialize
       self.primary_region = ENV["PRIMARY_REGION"]
       self.current_region = ENV["FLY_REGION"]
@@ -33,10 +35,7 @@ module Fly
       self.database_port_env_var = "DATABASE_PORT"
       self.replay_threshold_cookie = "fly-replay-threshold"
       self.replay_threshold_in_seconds = 5
-    end
-
-    def database_url
-      ENV[database_url_env_var]
+      self.database_url = ENV[database_url_env_var]
     end
 
     def regional_database_uri

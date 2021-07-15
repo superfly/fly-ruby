@@ -15,20 +15,19 @@ class Fly::Railtie < Rails::Railtie
 
   # Set useful headers for debugging
   def set_debug_response_headers
-    ApplicationController.send(:after_action) do
-      response.headers['Fly-Region'] = ENV['FLY_REGION']
-      response.headers['Fly-Database-Host'] = Fly.configuration.regional_database_config["host"]
+    ActiveSupport.on_load(:action_controller) do
+      ApplicationController.send(:after_action) do
+        response.headers['Fly-Region'] = ENV['FLY_REGION']
+        response.headers['Fly-Database-Host'] = Fly.configuration.regional_database_config["host"]
+      end
     end
   end
 
   initializer("fly.regional_database") do |app|
-    ActiveSupport.on_load(:action_controller) do
-      set_debug_response_headers
-    end
+    set_debug_response_headers
     if Fly.configuration.eligible_for_activation?
-      app.config.middleware.insert_after ActionDispatch::Executor, Fly::RegionalDatabase
-
       # Run the middleware high in the stack, but after static file delivery
+      app.config.middleware.insert_after ActionDispatch::Executor, Fly::RegionalDatabase
       hijack_database_connection if Fly.configuration.in_secondary_region?
     elsif Fly.configuration.web?
       puts "Warning: DATABASE_URL, PRIMARY_REGION and FLY_REGION must be set to activate the fly-ruby middleware. Middleware not loaded."

@@ -6,7 +6,8 @@ require "minitest/around/unit"
 
 require_relative "test_rails_app/app"
 
-ENV["DATABASE_URL"] = "postgres://localhost:5432/fly_ruby_test"
+POSTGRES_HOST = ENV['DATABASE_HOST'] || 'localhost'
+ENV["DATABASE_URL"] = "postgres://#{POSTGRES_HOST}:5432/fly_ruby_test"
 
 class TestFlyRails < Minitest::Test
   include Rack::Test::Methods
@@ -29,14 +30,14 @@ class TestFlyRails < Minitest::Test
 
   def test_database_connection_is_overloaded
     config = ActiveRecord::Base.connection_db_config.configuration_hash
-    assert_equal "ams.localhost", config[:host]
+    assert_equal "ams.#{POSTGRES_HOST}", config[:host]
     assert_equal 5433, config[:port]
   end
 
   def test_debug_headers_are_appended_to_responses
     get "/"
     assert_equal "ams", last_response.headers["Fly-Region"]
-    assert_equal "ams.localhost", last_response.headers["Fly-Database-Host"]
+    assert_equal "ams.#{POSTGRES_HOST}", last_response.headers["Fly-Database-Host"]
   end
 end
 

@@ -11,7 +11,7 @@ class TestApp < Rails::Application;end
 ActiveRecord::Base.establish_connection(
   adapter: "postgresql",
   database: "fly_ruby_test",
-  host: "localhost",
+  host: ENV['DATABASE_HOST'] || 'localhost',
   port: "5432"
 )
 

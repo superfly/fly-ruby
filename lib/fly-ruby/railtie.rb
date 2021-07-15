@@ -18,7 +18,7 @@ class Fly::Railtie < Rails::Railtie
         # Set useful headers for debugging
         ::ApplicationController.send(:after_action) do
           response.headers['Fly-Region'] = ENV['FLY_REGION']
-          response.headers['Fly-Database-Host'] = ENV[Fly.configuration.database_host_env_var]
+          response.headers['Fly-Database-Host'] = Fly.configuration.regional_database_config["host"]
         end
       end
 

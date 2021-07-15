@@ -12,10 +12,14 @@ class TestFlyRails < Minitest::Test
   include Rack::Test::Methods
 
   def setup
-    ENV['FLY_REGION'] = "ams"
+    ENV["FLY_REGION"] = "ams"
     Fly.configuration.primary_region = "ams"
     Fly.configuration.current_region = "iad"
     @app = make_basic_app
+  end
+
+  def app
+    @app
   end
 
   def test_middleware_inserted_with_required_env_vars
@@ -24,7 +28,15 @@ class TestFlyRails < Minitest::Test
   end
 
   def test_database_connection_is_overloaded
-    assert_equal "ams.localhost", ActiveRecord::Base.connection_db_config.configuration_hash[:host]
+    config = ActiveRecord::Base.connection_db_config.configuration_hash
+    assert_equal "ams.localhost", config[:host]
+    assert_equal 5433, config[:port]
+  end
+
+  def test_debug_headers_are_appended_to_responses
+    get "/"
+    assert_equal "ams", last_response.headers["Fly-Region"]
+    assert_equal "ams.localhost", last_response.headers["Fly-Database-Host"]
   end
 end
 

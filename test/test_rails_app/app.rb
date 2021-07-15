@@ -12,7 +12,9 @@ ActiveRecord::Base.establish_connection(
   adapter: "postgresql",
   database: "fly_ruby_test",
   host: ENV['DATABASE_HOST'] || 'localhost',
-  port: "5432"
+  port: "5432",
+  username: ENV['DATABASE_USER'],
+  password: "postgres_password"
 )
 
 ActiveRecord::Base.logger = Logger.new(nil)

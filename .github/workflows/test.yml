@@ -47,6 +47,8 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v2
     - name: Run tests
+      env:
+        DATABASE_USER: postgres_user
       run: |
         bundle install --jobs 4 --retry 3
         rake

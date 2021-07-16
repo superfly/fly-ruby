@@ -18,7 +18,6 @@ class Fly::Railtie < Rails::Railtie
     ActiveSupport::Reloader.to_prepare do
       ApplicationController.send(:after_action) do
         response.headers['Fly-Region'] = ENV['FLY_REGION']
-        response.headers['Fly-Database-Host'] = Fly.configuration.regional_database_config["host"]
       end
     end
   end

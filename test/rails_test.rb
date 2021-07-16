@@ -6,28 +6,26 @@ require "minitest/around/unit"
 
 require_relative "test_rails_app/app"
 
-POSTGRES_HOST = ENV['DATABASE_HOST'] || 'localhost'
+POSTGRES_HOST = ENV["DATABASE_HOST"] || "localhost"
 ENV["DATABASE_URL"] = "postgres://#{POSTGRES_HOST}:5432/fly_ruby_test"
 
 class TestFlyRails < Minitest::Test
   include Rack::Test::Methods
 
+  attr_reader :app
+
   def setup
+    Fly.configuration.current_region = "ams"
+    Fly.configuration.primary_region = "iad"
     ENV["PRIMARY_REGION"] = "iad"
     ENV["FLY_REGION"] = "ams"
-    Fly.configuration.primary_region = "ams"
-    Fly.configuration.current_region = "iad"
     @app = make_basic_app
-  end
-
-  def app
-    @app
   end
 
   def test_middleware_inserted_with_required_env_vars
     index_of_executor = @app.middleware.find_index { |m| m == ActionDispatch::Executor }
     assert_equal index_of_executor + 1, @app.middleware.find_index(Fly::RegionalDatabase::ReplayableRequestMiddleware)
-    assert_equal 0, @app.middleware.find_index(Fly::RegionalDatabase::DbExceptionHandlerMiddleware)
+    assert_equal @app.middleware.size - 1, @app.middleware.find_index(Fly::RegionalDatabase::DbExceptionHandlerMiddleware)
   end
 
   def test_database_connection_is_overloaded
@@ -46,10 +44,10 @@ class TestFlyRails < Minitest::Test
     assert last_response.headers['Fly-Replay']
   end
 
-  # def test_database_write_exception_gets_replayed
-  #   get "/exception"
-  # end
-
+  def test_database_write_exception_gets_replayed
+    get "/exception"
+    assert last_response.headers["Fly-Replay"] =~ /captured_write/
+  end
 end
 
 class TestBadEnv < Minitest::Test

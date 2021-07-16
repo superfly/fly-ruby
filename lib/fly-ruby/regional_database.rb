@@ -29,14 +29,12 @@ module Fly
       end
 
       def call(env)
-        begin
-          @app.call(env)
-        rescue PG::ReadOnlySqlTransaction, ActiveRecord::StatementInvalid => e
-          if e.cause.is_a?(PG::ReadOnlySqlTransaction)
-            RegionalDatabase.replay_in_primary_region!(state: "captured_write")
-          else
-            raise e
-          end
+        @app.call(env)
+      rescue PG::ReadOnlySqlTransaction, ActiveRecord::StatementInvalid => e
+        if e.is_a?(PG::ReadOnlySqlTransaction) || e&.cause&.is_a?(PG::ReadOnlySqlTransaction)
+          RegionalDatabase.replay_in_primary_region!(state: "captured_write")
+        else
+          raise e
         end
       end
     end

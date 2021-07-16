@@ -26,8 +26,10 @@ class Fly::Railtie < Rails::Railtie
     set_debug_response_headers if Fly.configuration.web?
 
     if Fly.configuration.eligible_for_activation?
-      # Run the middleware high in the stack, but after static file delivery
-      app.config.middleware.insert_after ActionDispatch::Executor, Fly::RegionalDatabase
+      # Insert the request interceptor high in the stack, but after static file delivery
+      app.config.middleware.insert_after ActionDispatch::Executor, Fly::RegionalDatabase::ReplayableRequestMiddleware
+      # Insert the database exception handler at the bottom of the stack to take priority over other exception handlers
+      app.config.middleware.insert_before 0, Fly::RegionalDatabase::DbExceptionHandlerMiddleware
       hijack_database_connection if Fly.configuration.in_secondary_region?
     elsif Fly.configuration.web?
       puts "Warning: DATABASE_URL, PRIMARY_REGION and FLY_REGION must be set to activate the fly-ruby middleware. Middleware not loaded."

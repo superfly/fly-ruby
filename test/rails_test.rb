@@ -26,7 +26,8 @@ class TestFlyRails < Minitest::Test
 
   def test_middleware_inserted_with_required_env_vars
     index_of_executor = @app.middleware.find_index { |m| m == ActionDispatch::Executor }
-    assert_equal index_of_executor + 1, @app.middleware.find_index(Fly::RegionalDatabase)
+    assert_equal index_of_executor + 1, @app.middleware.find_index(Fly::RegionalDatabase::ReplayableRequestMiddleware)
+    assert_equal 0, @app.middleware.find_index(Fly::RegionalDatabase::DbExceptionHandlerMiddleware)
   end
 
   def test_database_connection_is_overloaded
@@ -44,6 +45,11 @@ class TestFlyRails < Minitest::Test
     post "/world"
     assert last_response.headers['Fly-Replay']
   end
+
+  # def test_database_write_exception_gets_replayed
+  #   get "/exception"
+  # end
+
 end
 
 class TestBadEnv < Minitest::Test

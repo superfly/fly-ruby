@@ -17,7 +17,7 @@ class TestFlyRuby < Minitest::Test
 
   def app
     app = lambda { |env| [200, {"Content-Type" => "text/plain"}, ["OK"]] }
-    Fly::RegionalDatabase.new(app)
+    Fly::RegionalDatabase::ReplayableRequestMiddleware.new(app)
   end
 
   def test_get_request_wont_replay_or_set_cookies

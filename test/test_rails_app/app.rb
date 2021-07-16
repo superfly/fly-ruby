@@ -55,7 +55,7 @@ class HelloController < ApplicationController
   prepend_view_path "spec/support/test_rails_app"
 
   def exception
-    raise "An unhandled exception!"
+    raise PG::ReadOnlySqlTransaction
   end
 
   def view

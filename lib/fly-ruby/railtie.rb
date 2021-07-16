@@ -15,7 +15,7 @@ class Fly::Railtie < Rails::Railtie
 
   # Set useful headers for debugging
   def set_debug_response_headers
-    ActiveSupport.on_load(:action_controller) do
+    ActiveSupport::Reloader.to_prepare do
       ::ApplicationController.send(:after_action) do
         response.headers['Fly-Region'] = ENV['FLY_REGION']
         response.headers['Fly-Database-Host'] = Fly.configuration.regional_database_config["host"]

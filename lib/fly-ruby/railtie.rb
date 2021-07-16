@@ -16,7 +16,7 @@ class Fly::Railtie < Rails::Railtie
   # Set useful headers for debugging
   def set_debug_response_headers
     ActiveSupport::Reloader.to_prepare do
-      ::ApplicationController.send(:after_action) do
+      ApplicationController.send(:after_action) do
         response.headers['Fly-Region'] = ENV['FLY_REGION']
         response.headers['Fly-Database-Host'] = Fly.configuration.regional_database_config["host"]
       end
@@ -24,7 +24,8 @@ class Fly::Railtie < Rails::Railtie
   end
 
   initializer("fly.regional_database") do |app|
-    set_debug_response_headers
+    set_debug_response_headers if Fly.configuration.web?
+
     if Fly.configuration.eligible_for_activation?
       # Run the middleware high in the stack, but after static file delivery
       app.config.middleware.insert_after ActionDispatch::Executor, Fly::RegionalDatabase

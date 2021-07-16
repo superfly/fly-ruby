@@ -22,6 +22,8 @@ class Fly::Railtie < Rails::Railtie
     end
   end
 
+  ENV['REDIS_CACHE_HOST'] = "#{ENV['FLY_REGION']}.#{ENV['REDIS_CACHE_HOST']}" if ENV['FLY_REGION']
+
   initializer("fly.regional_database") do |app|
     set_debug_response_headers if Fly.configuration.web?
 
@@ -30,7 +32,10 @@ class Fly::Railtie < Rails::Railtie
       app.config.middleware.insert_after ActionDispatch::Executor, Fly::RegionalDatabase::ReplayableRequestMiddleware
       # Insert the database exception handler at the bottom of the stack to take priority over other exception handlers
       app.config.middleware.use Fly::RegionalDatabase::DbExceptionHandlerMiddleware
-      hijack_database_connection if Fly.configuration.in_secondary_region?
+
+      if Fly.configuration.in_secondary_region?
+        hijack_database_connection
+      end
     elsif Fly.configuration.web?
       puts "Warning: DATABASE_URL, PRIMARY_REGION and FLY_REGION must be set to activate the fly-ruby middleware. Middleware not loaded."
     end

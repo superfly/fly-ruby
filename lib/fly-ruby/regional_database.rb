@@ -10,30 +10,6 @@ module Fly
       @app = app
     end
 
-    # Overwrite the database connection string environment variable
-    # to prefer connections to the regional replica.
-    #
-    # For Rails apps, this process will be repeated at middleware insertion time,
-    # to support situations where the database is already accessed by other
-    # initialization code. See Fly::Railtie.
-
-    def prefer_regional_database!
-      return if Fly.configuration.web?
-
-      uri = Fly.configuration.database_uri
-
-      ENV[Fly.configuration.database_url_env_var] = uri.to_s
-      ENV[Fly.configuration.database_host_env_var] = uri.hostname
-      ENV[Fly.configuration.database_port_env_var] = uri.port.to_s
-    end
-
-    def in_primary_region?
-      Fly.configuration.primary_region == Fly.configuration.current_region
-    end
-
-    def regional_database_url
-    end
-
     def response_body
       "<html>Replaying request in #{Fly.configuration.primary_region}</html>"
     end
@@ -48,7 +24,7 @@ module Fly
     #
     def replay_in_primary_region!(state:)
       res = Rack::Response.new(
-        response_body,
+        "",
         409,
         {"fly-replay" => "region=#{Fly.configuration.primary_region};state=#{state}"}
       )
@@ -79,7 +55,7 @@ module Fly
     #    helps avoid the same client from missing its own write due to replication lag,
     #    like when a user adds to a todo list via XHR
 
-      if !in_primary_region?
+      if Fly.configuration.in_secondary_region?
         if replayable_http_method?(request.request_method)
           return replay_in_primary_region!(state: "http_method")
         elsif within_replay_threshold?(request.cookies[Fly.configuration.replay_threshold_cookie])
@@ -100,7 +76,8 @@ module Fly
       response = Rack::Response.new(body, status, headers)
       replay_state = replay_request_state(request.get_header("HTTP_FLY_REPLAY_SRC"))
 
-      # Request was replayed, but not by a threshold
+      # Request was replayed, but not by a threshold, so set a threshold within which
+      # all requests should be replayed to the primary region
       if replay_state && replay_state != "threshold"
         response.set_cookie(
           Fly.configuration.replay_threshold_cookie,

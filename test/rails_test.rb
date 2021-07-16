@@ -13,6 +13,7 @@ class TestFlyRails < Minitest::Test
   include Rack::Test::Methods
 
   def setup
+    ENV["PRIMARY_REGION"] = "iad"
     ENV["FLY_REGION"] = "ams"
     Fly.configuration.primary_region = "ams"
     Fly.configuration.current_region = "iad"
@@ -37,7 +38,11 @@ class TestFlyRails < Minitest::Test
   def test_debug_headers_are_appended_to_responses
     get "/"
     assert_equal "ams", last_response.headers["Fly-Region"]
-    assert_equal "ams.#{POSTGRES_HOST}", last_response.headers["Fly-Database-Host"]
+  end
+
+  def test_post_gets_replayed
+    post "/world"
+    assert last_response.headers['Fly-Replay']
   end
 end
 

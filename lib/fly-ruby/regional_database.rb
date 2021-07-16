@@ -26,7 +26,7 @@ module Fly
       res = Rack::Response.new(
         "",
         409,
-        {"fly-replay" => "region=#{Fly.configuration.primary_region};state=#{state}"}
+        {"Fly-Replay" => "region=#{Fly.configuration.primary_region};state=#{state}"}
       )
       res.finish
     end
@@ -54,7 +54,6 @@ module Fly
     # 2. It arrived before the threshold defined by the last write request. This threshold
     #    helps avoid the same client from missing its own write due to replication lag,
     #    like when a user adds to a todo list via XHR
-
       if Fly.configuration.in_secondary_region?
         if replayable_http_method?(request.request_method)
           return replay_in_primary_region!(state: "http_method")

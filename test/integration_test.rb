@@ -60,6 +60,6 @@ class TestFlyRuby < Minitest::Test
 
   def assert_replayed(state)
     assert_equal 409, last_response.status
-    assert_equal "region=iad;state=#{state}", last_response.headers["fly-replay"]
+    assert_equal "region=iad;state=#{state}", last_response.headers["Fly-Replay"]
   end
 end

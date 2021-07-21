@@ -15,6 +15,7 @@ module Fly
     attr_accessor :database_url_env_var
     attr_accessor :database_host_env_var
     attr_accessor :database_port_env_var
+    attr_accessor :redis_url_env_var
 
     # Cookie written and read by this middleware storing a UNIX timestamp.
     # Requests arriving before this timestamp will be replayed in the primary region.
@@ -25,31 +26,59 @@ module Fly
     attr_accessor :replay_threshold_in_seconds
 
     attr_accessor :database_url
+    attr_accessor :redis_url
 
     def initialize
       self.primary_region = ENV["PRIMARY_REGION"]
       self.current_region = ENV["FLY_REGION"]
       self.replay_http_methods = ["POST", "PUT", "PATCH", "DELETE"]
       self.database_url_env_var = "DATABASE_URL"
+      self.redis_url_env_var = "REDIS_URL"
       self.database_host_env_var = "DATABASE_HOST"
       self.database_port_env_var = "DATABASE_PORT"
       self.replay_threshold_cookie = "fly-replay-threshold"
       self.replay_threshold_in_seconds = 5
       self.database_url = ENV[database_url_env_var]
+      self.redis_url = ENV[redis_url_env_var]
     end
 
-    def regional_database_uri
-      @uri ||= URI.parse(database_url)
-      @uri
+    def database_uri
+      @database_uri ||= URI.parse(database_url)
+      @database_uri
+    end
+
+    def regional_database_url
+      uri = database_uri.dup
+      uri.host = regional_database_host
+      uri.to_s
+    end
+
+    def regional_database_host
+      "#{current_region}.#{database_uri.hostname}"
     end
 
     # Rails-compatible database configuration
     def regional_database_config
       {
-        "host" => "#{current_region}.#{regional_database_uri.hostname}",
+        "host" => regional_database_host,
         "port" => 5433,
         "adapter" => "postgresql"
       }
+    end
+
+    def redis_uri
+      @redis_uri ||= URI.parse(redis_url)
+      @redis_uri
+    end
+
+    def regional_redis_host
+      "#{current_region}.#{redis_uri.hostname}"
+    end
+
+    def regional_redis_url
+      uri = redis_uri.dup
+      uri.host = regional_redis_host
+      uri.to_s
     end
 
     def eligible_for_activation?

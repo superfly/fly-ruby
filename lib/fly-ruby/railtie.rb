@@ -1,5 +1,3 @@
-require_relative '../fly-ruby'
-
 class Fly::Railtie < Rails::Railtie
   def hijack_database_connection
     ActiveSupport::Reloader.to_prepare do
@@ -21,8 +19,6 @@ class Fly::Railtie < Rails::Railtie
       end
     end
   end
-
-  ENV['REDIS_CACHE_HOST'] = "#{ENV['FLY_REGION']}.#{ENV['REDIS_CACHE_HOST']}" if ENV['FLY_REGION']
 
   initializer("fly.regional_database") do |app|
     set_debug_response_headers if Fly.configuration.web?

@@ -4,7 +4,7 @@ require_relative "../lib/fly-ruby"
 
 ENV["TESTING"] = "1"
 
-class TestFlyRuby < Minitest::Test
+class RegionalDatabaseTest < Minitest::Test
   include Rack::Test::Methods
 
   def setup

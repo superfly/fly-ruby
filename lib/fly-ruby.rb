@@ -1,5 +1,7 @@
 require_relative "fly-ruby/configuration"
 require_relative "fly-ruby/regional_database"
+require_relative "fly-ruby/headers"
+
 require "forwardable"
 
 if defined?(::Rails)

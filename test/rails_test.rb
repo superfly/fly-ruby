@@ -24,7 +24,8 @@ class TestFlyRails < Minitest::Test
 
   def test_middleware_inserted_with_required_env_vars
     index_of_executor = @app.middleware.find_index { |m| m == ActionDispatch::Executor }
-    assert_equal index_of_executor + 1, @app.middleware.find_index(Fly::RegionalDatabase::ReplayableRequestMiddleware)
+    assert_equal index_of_executor + 1, @app.middleware.find_index(Fly::Headers)
+    assert_equal index_of_executor + 2, @app.middleware.find_index(Fly::RegionalDatabase::ReplayableRequestMiddleware)
     assert_equal @app.middleware.size - 1, @app.middleware.find_index(Fly::RegionalDatabase::DbExceptionHandlerMiddleware)
   end
 

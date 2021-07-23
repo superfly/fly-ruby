@@ -11,21 +11,12 @@ class Fly::Railtie < Rails::Railtie
     end
   end
 
-  # Set useful headers for debugging
-  def set_debug_response_headers
-    ActiveSupport::Reloader.to_prepare do
-      ApplicationController.send(:after_action) do
-        response.headers['Fly-Region'] = ENV['FLY_REGION']
-      end
-    end
-  end
-
   initializer("fly.regional_database") do |app|
-    set_debug_response_headers if Fly.configuration.web?
+    # Insert the request middleware high in the stack, but after static file delivery
+    app.config.middleware.insert_after ActionDispatch::Executor, Fly::Headers if Fly.configuration.web?
 
     if Fly.configuration.eligible_for_activation?
-      # Insert the request interceptor high in the stack, but after static file delivery
-      app.config.middleware.insert_after ActionDispatch::Executor, Fly::RegionalDatabase::ReplayableRequestMiddleware
+      app.config.middleware.insert_after Fly::Headers, Fly::RegionalDatabase::ReplayableRequestMiddleware
       # Insert the database exception handler at the bottom of the stack to take priority over other exception handlers
       app.config.middleware.use Fly::RegionalDatabase::DbExceptionHandlerMiddleware
 

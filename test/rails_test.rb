@@ -7,7 +7,6 @@ require "minitest/around/unit"
 require_relative "test_rails_app/app"
 
 POSTGRES_HOST = ENV["DATABASE_HOST"] || "localhost"
-ENV["DATABASE_URL"] = "postgres://#{POSTGRES_HOST}:5432/fly_ruby_test"
 
 class TestFlyRails < Minitest::Test
   include Rack::Test::Methods
@@ -15,6 +14,7 @@ class TestFlyRails < Minitest::Test
   attr_reader :app
 
   def setup
+    ENV["DATABASE_URL"] = "postgres://#{POSTGRES_HOST}:5432/fly_ruby_test"
     Fly.configuration.current_region = "ams"
     Fly.configuration.primary_region = "iad"
     ENV["PRIMARY_REGION"] = "iad"

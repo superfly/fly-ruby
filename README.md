@@ -49,7 +49,7 @@ Fly.configure do |c|
 end
 ```
 
-See [the source code](https://github.com/soupedup/fly-rails/blob/main/lib/fly-rails/configuration.rb) for defaults and available configuration options.
+See [the source code](https://github.com/superfly/fly-ruby/blob/main/lib/fly-ruby/configuration.rb) for defaults and available configuration options.
 ## Known issues
 
 This middleware send all requests to the primary if you do something like update a user's database session on every GET request.

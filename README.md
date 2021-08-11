@@ -1,8 +1,8 @@
 [![Test](https://github.com/superfly/fly-ruby/actions/workflows/test.yml/badge.svg)](https://github.com/superfly/fly-ruby/actions/workflows/test.yml)
 
-This gem contains helper code and Rack middleware for deploying Ruby web apps on [Fly.io](https://fly.io). Supported features:
+This gem contains helper code and Rack middleware for deploying Ruby web apps on [Fly.io](https://fly.io). It's designed to speed up apps by using region-local Postgresql replicas for database reads. See the blog post for more details:
 
-* Speed up apps by using region-local Postgresql replicas for database reads
+https://fly.io/blog/run-ordinary-rails-apps-globally
 
 ## Speed up apps using region-local database replicas
 

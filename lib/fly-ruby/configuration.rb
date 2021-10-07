@@ -60,9 +60,9 @@ module Fly
     # Rails-compatible database configuration
     def regional_database_config
       {
-        "host" => regional_database_host,
-        "port" => 5433,
-        "adapter" => "postgresql"
+        :host => regional_database_host,
+        :port => 5433,
+        :adapter => "postgresql"
       }
     end
 

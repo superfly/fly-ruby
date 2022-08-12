@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class Fly::Railtie < Rails::Railtie
   def hijack_database_connection
     ActiveSupport::Reloader.to_prepare do

@@ -61,7 +61,9 @@ class TestBadEnv < Minitest::Test
   end
 
   def test_middleware_skipped_without_required_env_vars
-    make_basic_app
+    assert_output %r/middleware not loaded/i do
+      make_basic_app
+    end
     refute Rails.application.middleware.find_index(Fly::RegionalDatabase)
   end
 end

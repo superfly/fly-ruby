@@ -3,12 +3,14 @@ require "minitest/autorun"
 require "bundler/setup"
 require "climate_control"
 require "minitest/around/unit"
+require "active_support/testing/isolation"
 
 require_relative "test_rails_app/app"
 
 POSTGRES_HOST = ENV["DATABASE_HOST"] || "localhost"
 
 class TestFlyRails < Minitest::Test
+  include ActiveSupport::Testing::Isolation
   include Rack::Test::Methods
 
   attr_reader :app
@@ -52,6 +54,8 @@ class TestFlyRails < Minitest::Test
 end
 
 class TestBadEnv < Minitest::Test
+  include ActiveSupport::Testing::Isolation
+
   def setup
     Fly.configuration.primary_region = nil
   end

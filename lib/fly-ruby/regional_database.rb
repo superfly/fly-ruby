@@ -53,7 +53,7 @@ module Fly
       end
 
       def replay_request_state(header_value)
-        header_value&.scan(/(.*?)=(.*?)($|;)/)&.detect { |v| v[0] == "state" }&.at(1)
+        header_value&.slice(/(?:^|;)state=([^;]*)/, 1)
       end
 
       def call(env)

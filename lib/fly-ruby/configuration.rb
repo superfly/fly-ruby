@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Fly
   class Configuration
     # Set the region where this instance of the application is deployed

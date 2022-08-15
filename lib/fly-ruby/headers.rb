@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Fly
   class Headers
     def initialize(app)

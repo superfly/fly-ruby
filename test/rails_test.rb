@@ -30,7 +30,19 @@ class TestFlyRails < Minitest::Test
     assert_equal @app.middleware.size - 1, @app.middleware.find_index(Fly::RegionalDatabase::DbExceptionHandlerMiddleware)
   end
 
-  def test_database_connection_is_overloaded
+  def test_database_configuration_is_overridden
+    config = ActiveRecord::Base.connection_db_config.configuration_hash
+    assert_equal "ams.#{POSTGRES_HOST}", config[:host]
+    assert_equal 5433, config[:port]
+  end
+
+  def test_database_configuration_is_overridden_when_connection_reestablished
+    ActiveRecord::Base.establish_connection({ url: "postgres://#{POSTGRES_HOST}:5432/fly_ruby_test" })
+    config = ActiveRecord::Base.connection_db_config.configuration_hash
+    assert_equal POSTGRES_HOST, config[:host]
+    assert_equal 5432, config[:port]
+
+    ActiveRecord::Base.establish_connection
     config = ActiveRecord::Base.connection_db_config.configuration_hash
     assert_equal "ams.#{POSTGRES_HOST}", config[:host]
     assert_equal 5433, config[:port]
@@ -52,7 +64,7 @@ class TestFlyRails < Minitest::Test
   end
 end
 
-class TestBadEnv < Minitest::Test
+class TestFlyRailsAlternativeEnvironments < Minitest::Test
   include ActiveSupport::Testing::Isolation
 
   def setup
@@ -66,5 +78,16 @@ class TestBadEnv < Minitest::Test
       make_basic_app
     end
     refute Rails.application.middleware.find_index(Fly::RegionalDatabase)
+  end
+
+  def test_database_connection_not_hijacked_when_using_sqlite
+    ENV["DATABASE_URL"] = "sqlite3://foo"
+    ENV["PRIMARY_REGION"] = "iad"
+    ENV["FLY_REGION"] = "ams"
+    make_basic_app
+
+    config = ActiveRecord::Base.connection_db_config.configuration_hash
+    assert_equal "foo", config[:host]
+    assert_nil config[:port]
   end
 end

@@ -62,12 +62,12 @@ module Fly
 
     def database_uri
       @database_uri ||= URI.parse(database_url)
-      @database_uri
     end
 
     def regional_database_url
       uri = database_uri.dup
       uri.host = regional_database_host
+      uri.port = regional_database_port
       uri.to_s
     end
 
@@ -75,13 +75,15 @@ module Fly
       "#{current_region}.#{database_uri.hostname}"
     end
 
-    # Rails-compatible database configuration
-    def regional_database_config
-      {
-        :host => regional_database_host,
-        :port => 5433,
-        :adapter => "postgresql"
-      }
+    def regional_database_port
+      port = if in_secondary_region?
+        case database_uri.scheme
+        when "postgres"
+          5433
+        end
+      end
+
+      port || database_uri.port
     end
 
     def redis_uri
@@ -101,6 +103,10 @@ module Fly
 
     def eligible_for_activation?
       database_url && primary_region && current_region && web?
+    end
+
+    def hijack_database_connection?
+      in_secondary_region? && !database_uri.scheme.start_with?("sqlite")
     end
 
     def in_secondary_region?

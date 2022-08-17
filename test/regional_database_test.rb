@@ -9,6 +9,7 @@ class RegionalDatabaseTest < Minitest::Test
 
   def setup
     ENV['DATABASE_URL'] = 'postgres://localhost:5432'
+    Fly.configuration = nil
     Fly.configure do |config|
       config.primary_region = "iad"
       config.current_region = "ams"

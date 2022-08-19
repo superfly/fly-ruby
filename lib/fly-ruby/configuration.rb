@@ -30,6 +30,9 @@ module Fly
     attr_accessor :database_url
     attr_accessor :redis_url
 
+    # An array of string representations of exceptions that should trigger a replay
+    attr_accessor :replayable_exceptions
+
     def initialize
       self.primary_region = ENV["PRIMARY_REGION"]
       self.current_region = ENV["FLY_REGION"]
@@ -42,6 +45,19 @@ module Fly
       self.replay_threshold_in_seconds = 5
       self.database_url = ENV[database_url_env_var]
       self.redis_url = ENV[redis_url_env_var]
+      self.replayable_exceptions = ["SQLite3::CantOpenException", "PG::ReadOnlySqlTransaction"]
+    end
+
+    def replayable_exception_classes
+      @replayable_exception_classes ||= replayable_exceptions.collect {|ex| module_exists?(ex) }.compact
+      @replayable_exception_classes
+    end
+
+    def module_exists?(module_name)
+      mod = Module.const_get(module_name)
+      return mod
+    rescue NameError
+      nil
     end
 
     def database_uri

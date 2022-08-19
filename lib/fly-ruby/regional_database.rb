@@ -31,9 +31,10 @@ module Fly
       end
 
       def call(env)
+        exceptions = Fly.configuration.replayable_exception_classes
         @app.call(env)
-      rescue PG::ReadOnlySqlTransaction, ActiveRecord::StatementInvalid => e
-        if e.is_a?(PG::ReadOnlySqlTransaction) || e&.cause&.is_a?(PG::ReadOnlySqlTransaction)
+      rescue *exceptions, ActiveRecord::RecordInvalid => e
+        if exceptions.any? {|ex| e.is_a?(ex) } || exceptions.any? { e&.cause&.is_a?(e) }
           RegionalDatabase.replay_in_primary_region!(state: "captured_write")
         else
           raise e

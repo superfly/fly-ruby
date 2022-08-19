@@ -22,16 +22,14 @@ module Fly
   end
 
   class Instance
-    attr_accessor :configuration
+    attr_writer :configuration
 
-    def initialize
-      self.configuration = Fly::Configuration.new
+    def configuration
+      @configuration ||= Fly::Configuration.new
     end
 
-    def configure
-      configuration = Fly::Configuration.new
-      yield(configuration) if block_given?
-      self.configuration = configuration
+    def configure(&block)
+      configuration.tap(&block)
     end
   end
 end

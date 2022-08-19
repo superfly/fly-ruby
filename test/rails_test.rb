@@ -17,10 +17,9 @@ class TestFlyRails < Minitest::Test
 
   def setup
     ENV["DATABASE_URL"] = "postgres://#{POSTGRES_HOST}:5432/fly_ruby_test"
-    Fly.configuration.current_region = "ams"
-    Fly.configuration.primary_region = "iad"
     ENV["PRIMARY_REGION"] = "iad"
     ENV["FLY_REGION"] = "ams"
+    Fly.configuration = nil
     @app = make_basic_app
   end
 
@@ -57,10 +56,12 @@ class TestBadEnv < Minitest::Test
   include ActiveSupport::Testing::Isolation
 
   def setup
-    Fly.configuration.primary_region = nil
+    Fly.configuration = nil
   end
 
   def test_middleware_skipped_without_required_env_vars
+    ENV["PRIMARY_REGION"] = nil
+
     assert_output %r/middleware not loaded/i do
       make_basic_app
     end

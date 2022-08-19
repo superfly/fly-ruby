@@ -1,5 +1,6 @@
 require "rails"
 require "active_record"
+require "active_record/railtie"
 require "action_view/railtie"
 require "action_controller/railtie"
 
@@ -77,6 +78,8 @@ def make_basic_app
       "RailsTestApp"
     end
   end
+
+  app.config.load_defaults Rails::VERSION::STRING.to_f
 
   app.config.hosts = nil
   app.config.secret_key_base = "test"

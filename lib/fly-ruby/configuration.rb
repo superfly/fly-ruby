@@ -64,18 +64,29 @@ module Fly
       @database_uri ||= URI.parse(database_url)
     end
 
-    def regional_database_url
+    def database_app_name
+      database_uri.hostname.split(".")[-2] || database_uri.hostname
+    end
+
+    def database_domain
+      "#{database_app_name}.internal"
+    end
+
+    def primary_database_url
       uri = database_uri.dup
-      uri.host = regional_database_host
-      uri.port = regional_database_port
+      uri.host = "#{primary_region}.#{database_domain}"
+      uri.port = secondary_database_port
       uri.to_s
     end
 
-    def regional_database_host
-      "#{current_region}.#{database_uri.hostname}"
+    def secondary_database_url
+      uri = database_uri.dup
+      uri.host = "top1.nearest.of.#{database_domain}"
+      uri.port = secondary_database_port
+      uri.to_s
     end
 
-    def regional_database_port
+    def secondary_database_port
       port = if in_secondary_region?
         case database_uri.scheme
         when "postgres"
@@ -105,8 +116,10 @@ module Fly
       database_url && primary_region && current_region && web?
     end
 
-    def hijack_database_connection?
-      in_secondary_region? && !database_uri.scheme.start_with?("sqlite")
+    def hijack_database_connection!
+      # Don't reset the database URL for on-disk sqlite
+      return if database_uri.scheme.start_with?("sqlite") || database_uri.host !~ /(internal|localhost)/
+      ENV["DATABASE_URL"] = in_secondary_region? ? secondary_database_url : primary_database_url
     end
 
     def in_secondary_region?

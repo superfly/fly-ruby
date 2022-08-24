@@ -9,6 +9,7 @@ class ConfigurationTest < Minitest::Test
     ENV["REDIS_URL"] = "redis://redis.internal:6379"
     ENV["DATABASE_URL"] = "postgresql://db.internal:6379"
     ENV["FLY_REGION"] = "iad"
+    ENV["PRIMARY_REGION"] = "iad"
     @configuration = Fly::Configuration.new
   end
 
@@ -18,7 +19,7 @@ class ConfigurationTest < Minitest::Test
   end
 
   def test_regional_database_config
-    assert_equal "postgresql://iad.db.internal:6379", @configuration.regional_database_url
-    assert_equal "iad.db.internal", @configuration.regional_database_host
+    assert_equal "postgresql://top1.nearest.of.db.internal:6379", @configuration.secondary_database_url
+    assert_equal "postgresql://iad.db.internal:6379", @configuration.primary_database_url
   end
 end

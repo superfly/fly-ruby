@@ -113,7 +113,7 @@ module Fly
     end
 
     def eligible_for_activation?
-      database_url && primary_region && current_region && web?
+      database_url && primary_region && current_region && !rake_task?
     end
 
     def hijack_database_connection!

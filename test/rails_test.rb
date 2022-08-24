@@ -32,7 +32,7 @@ class TestFlyRails < Minitest::Test
 
   def test_database_configuration_is_overridden
     config = ActiveRecord::Base.connection_db_config.configuration_hash
-    assert_equal "ams.#{POSTGRES_HOST}", config[:host]
+    assert_equal "top1.nearest.of.#{POSTGRES_HOST}.internal", config[:host]
     assert_equal 5433, config[:port]
   end
 
@@ -44,7 +44,7 @@ class TestFlyRails < Minitest::Test
 
     ActiveRecord::Base.establish_connection
     config = ActiveRecord::Base.connection_db_config.configuration_hash
-    assert_equal "ams.#{POSTGRES_HOST}", config[:host]
+    assert_equal "top1.nearest.of.#{POSTGRES_HOST}.internal", config[:host]
     assert_equal 5433, config[:port]
   end
 
@@ -61,6 +61,36 @@ class TestFlyRails < Minitest::Test
   def test_database_write_exception_gets_replayed
     get "/exception"
     assert last_response.headers["Fly-Replay"] =~ /captured_write/
+  end
+end
+
+class TestFlyRailsPrimary < Minitest::Test
+  include ActiveSupport::Testing::Isolation
+  include Rack::Test::Methods
+
+  attr_reader :app
+
+  def setup
+    ENV["DATABASE_URL"] = "postgres://#{POSTGRES_HOST}:5432/fly_ruby_test"
+    ENV["PRIMARY_REGION"] = "iad"
+    ENV["FLY_REGION"] = "iad"
+    Fly.configuration = nil
+    @app = make_basic_app
+  end
+
+  def test_database_configuration_is_overridden
+    config = ActiveRecord::Base.connection_db_config.configuration_hash
+    assert_equal "iad.#{POSTGRES_HOST}.internal", config[:host]
+  end
+
+  def test_database_configuration_is_overridden_when_connection_reestablished
+    ActiveRecord::Base.establish_connection({ url: "postgres://#{POSTGRES_HOST}:5432/fly_ruby_test" })
+    config = ActiveRecord::Base.connection_db_config.configuration_hash
+    assert_equal POSTGRES_HOST, config[:host]
+
+    ActiveRecord::Base.establish_connection
+    config = ActiveRecord::Base.connection_db_config.configuration_hash
+    assert_equal "iad.#{POSTGRES_HOST}.internal", config[:host]
   end
 end
 

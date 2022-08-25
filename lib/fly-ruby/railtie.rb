@@ -3,7 +3,7 @@
 class Fly::Railtie < Rails::Railtie
   initializer("fly.regional_database", before: "active_record.initialize_database") do |app|
     # Insert the request middleware high in the stack, but after static file delivery
-    app.config.middleware.insert_after ActionDispatch::Executor, Fly::Headers if Fly.configuration.web?
+    app.config.middleware.insert_after ActionDispatch::Executor, Fly::Headers
 
     if Fly.configuration.eligible_for_activation?
 

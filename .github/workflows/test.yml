@@ -9,6 +9,7 @@ jobs:
         include:
           - { os: ubuntu-latest, ruby_version: 2.7 }
           - { os: ubuntu-latest, ruby_version: '3.0' }
+          - { os: ubuntu-latest, ruby_version: 3.1 }
     services:
     # label used to access the service container
       postgres:
@@ -36,12 +37,12 @@ jobs:
           --health-retries 5
     steps:
     - name: Setup Ruby, JRuby and TruffleRuby
-      uses: ruby/setup-ruby@v1.75.0
+      uses: ruby/setup-ruby@v1
       with:
         bundler: 1
         ruby-version: ${{ matrix.ruby_version }}
     - name: Checkout code
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
     - name: Run tests
       env:
         DATABASE_USER: postgres_user
